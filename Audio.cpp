@@ -8,7 +8,6 @@
 static IXAudio2* g_Xaudio{};
 static IXAudio2MasteringVoice* g_MasteringVoice{};
 
-
 void InitAudio()
 {
 	// XAudio生成
@@ -18,20 +17,11 @@ void InitAudio()
 	g_Xaudio->CreateMasteringVoice(&g_MasteringVoice);
 }
 
-
 void UninitAudio()
 {
 	g_MasteringVoice->DestroyVoice();
 	g_Xaudio->Release();
 }
-
-
-
-
-
-
-
-
 
 struct AUDIO
 {
@@ -44,7 +34,6 @@ struct AUDIO
 
 #define AUDIO_MAX 100
 static AUDIO g_Audio[AUDIO_MAX]{};
-
 
 
 int LoadAudio(const char *FileName)
@@ -62,9 +51,6 @@ int LoadAudio(const char *FileName)
 
 	if (index == -1)
 		return -1;
-
-
-
 
 	// サウンドデータ読込
 	WAVEFORMATEX wfx = { 0 };
@@ -129,8 +115,6 @@ int LoadAudio(const char *FileName)
 }
 
 
-
-
 void UnloadAudio(int Index)
 {
 	g_Audio[Index].SourceVoice->Stop();
@@ -139,9 +123,6 @@ void UnloadAudio(int Index)
 	delete[] g_Audio[Index].SoundData;
 	g_Audio[Index].SoundData = nullptr;
 }
-
-
-
 
 
 void PlayAudio(int Index, bool Loop)
@@ -174,6 +155,3 @@ void PlayAudio(int Index, bool Loop)
 	g_Audio[Index].SourceVoice->Start();
 
 }
-
-
-
