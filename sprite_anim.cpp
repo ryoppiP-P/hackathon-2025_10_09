@@ -3,8 +3,8 @@
 
 void AnimPattern::Draw(float dx, float dy, float dw, float dh, int patternNum, DirectX::XMFLOAT4 color){
 	Sprite_Draw(m_texid, dx, dy, dw, dh,
-		m_startPosition.x + m_patternSize.x * (patternNum % m_horizontalPatternMax),
-		m_startPosition.y + m_patternSize.y * (patternNum / m_horizontalPatternMax),
+		m_startPosition.x + m_patternSize.x * patternNum,
+		m_startPosition.y,
 		m_patternSize.x, m_patternSize.y, color);
 }
 

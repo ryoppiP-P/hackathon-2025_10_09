@@ -20,4 +20,10 @@ void Sprite_Draw(
     int tx, int ty, int tw, int th,
     DirectX::XMFLOAT4 color = {1.0f, 1.0f, 1.0f, 1.0f});
 
+void Sprite_Draw(
+    int texid,
+    float x, float y, float width, float height,
+    int tx, int ty, int tw, int th, float angle,
+    DirectX::XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f });
+
 #endif // SPRITE_H

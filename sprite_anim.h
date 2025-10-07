@@ -16,7 +16,6 @@ class AnimPattern {
 private:
 	int m_texid;
 	int m_patternMax;
-	int m_horizontalPatternMax;
 	double m_secondPerPattern;
 	DirectX::XMUINT2 m_startPosition;
 	DirectX::XMUINT2 m_patternSize;	// x->w y->h
@@ -24,11 +23,10 @@ private:
 
 public:
 	AnimPattern() = delete;
-	AnimPattern(int texid, int patternMax, int horizontalPatternMax, double secondPerPattern,
+	AnimPattern(int texid, int patternMax, double secondPerPattern,
 		DirectX::XMUINT2 startPosition, DirectX::XMUINT2 patternSize)
 		: m_texid(texid)
 		, m_patternMax(patternMax)
-		, m_horizontalPatternMax(horizontalPatternMax)
 		, m_secondPerPattern(secondPerPattern)
 		, m_startPosition(startPosition)
 		, m_patternSize(patternSize)

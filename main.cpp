@@ -1,30 +1,35 @@
 /*****************************************************************//**
  * \file   main.cpp
- * \brief  マリオ風2Dプラットフォーマー
- *
+ * \brief  
+ * 
  * \author 菊池凌斗
- * \date   2025/10/6
+ * \date   2025/4/25
  *********************************************************************/
 #include <SDKDDKVer.h>
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <algorithm>
 #include "direct3d.h"
 #include "shader.h"
 #include "texture.h"
 #include "sprite.h"
+#include "sprite_anim.h"
 #include "system_timer.h"
-#include "Audio.h"
+#include "debug_text.h"
+#include "key_logger.h"
+#include <Xinput.h>
+#pragma comment(lib, "xinput.lib")
+#include "mouse.h"
 
-// Engine includes
-#include "Engine/SceneManager.h"
-#include "Engine/Time.h"
-#include "Engine/Input.h"
-#include "Engine/CollisionManager.h"
-#include "GameScenes/MarioScene.h"
+#include <sstream>
+#include <DirectXMath.h>
+using namespace DirectX;
+
+
 
 //ウィンドウ情報
-static constexpr char WINDOW_CLASS[] = "MarioGame";
-static constexpr char TITLE[] = "Super Mario Bros. Style Game";
+static constexpr char WINDOW_CLASS[] = "GameWindow"; // x151957
+static constexpr char TITLE[] = "ウィンドウ表示";// タイトルバーのテキスト
 
 //ウィンドウプロシージャ プロトタイプ宣言
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -32,128 +37,269 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 // メイン
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
-    (void)CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	(void)CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-    /* ウィンドウクラスの登録*/
-    WNDCLASSEX wcex{};
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.lpfnWndProc = WndProc;
-    wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = nullptr;
-    wcex.lpszClassName = WINDOW_CLASS;
-    wcex.hIconSm = LoadIcon(wcex.hInstance, IDI_APPLICATION);
+	/* ウィンドウクラスの登録*/
+	WNDCLASSEX wcex{};
 
-    RegisterClassEx(&wcex);
+	wcex.cbSize = sizeof(WNDCLASSEX); 
+	wcex.lpfnWndProc = WndProc;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
+	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = nullptr; //メニューは作らない
+	wcex.lpszClassName = WINDOW_CLASS;
+	wcex.hIconSm = LoadIcon(wcex.hInstance, IDI_APPLICATION);
 
-    // ウィンドウ作成
-    RECT window_rect = { 0, 0, 1280, 720 };
-    DWORD window_style = WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
-    AdjustWindowRect(&window_rect, window_style, FALSE);
+	RegisterClassEx(&wcex);
 
-    int window_width = window_rect.right - window_rect.left;
-    int window_height = window_rect.bottom - window_rect.top;
+	// クライアント領域のサイズを持った（左からleft, top, right, bottom）
+	RECT window_rect = { 0, 0, 1280, 720 };
+	// ウィンドウのスタイル
+	DWORD window_style = WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+	// 指定したクライアント領域を確保するために新たな矩形座標を計算
+	AdjustWindowRect(&window_rect, window_style, FALSE);
 
-    int desktop_width = GetSystemMetrics(SM_CXSCREEN);
-    int desktop_height = GetSystemMetrics(SM_CYSCREEN);
+	// ウィンドウの幅と高さを算出
+	int window_width = window_rect.right - window_rect.left;
+	int window_height = window_rect.bottom - window_rect.top;
 
-    int window_x = std::max((desktop_width - window_width) / 2, 0);
-    int window_y = std::max((desktop_height - window_height) / 2, 0);
+	// プライマリモニターの画像解像度取得
+	int desktop_width = GetSystemMetrics(SM_CXSCREEN);
+	int desktop_height = GetSystemMetrics(SM_CYSCREEN);
 
-    HWND hwnd = CreateWindow(
-        WINDOW_CLASS, TITLE, window_style,
-        window_x, window_y, window_width, window_height,
-        nullptr, nullptr, hInstance, nullptr
-    );
+	// デスクトップの真ん中にウィンドウが生成されるように座標を計算
+	// ※ただし万が一、デスクトップよりウィンドウが大きい場合は左上に表示
+	int window_x = std::max((desktop_width - window_width) / 2, 0);
+	int window_y = std::max((desktop_height - window_height) / 2, 0);
 
-    /* 各種初期化 */
-    if (!Direct3D_Initialize(hwnd)) {
-        PostQuitMessage(0);
-    } else {
-        if (!Shader_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext())) {
-            PostQuitMessage(0);
-        } else {
-            Texture_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
-            Sprite_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
-            InitAudio();
-        }
-    }
 
-    ShowWindow(hwnd, nCmdShow);
-    UpdateWindow(hwnd);
+	/* メインウィンドウの作成 */
+	HWND hwnd = CreateWindow(
+		WINDOW_CLASS, 
+		TITLE,
+		window_style,
+		window_x,
+		window_y,
+		window_width,
+		window_height,
+		nullptr,
+		nullptr,
+		hInstance,
+		nullptr
+	);
 
-    SystemTimer_Initialize();
+	/* 各種初期化 */
+	if (!Direct3D_Initialize(hwnd)) {
+		PostQuitMessage(0);
+	} else {
+		if (!Shader_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext())) {
+			PostQuitMessage(0);
+		} else {
+			Texture_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+			Sprite_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+		}
+	}
 
-    // シーンマネージャーの初期化
-    auto& sceneManager = Engine::SceneManager::Instance();
-    sceneManager.LoadScene(std::make_unique<MarioScene>());
+	hal::DebugText dt(Direct3D_GetDevice(), Direct3D_GetDeviceContext(),
+		L"resource/texture/consolab_ascii_512.png",
+		Direct3D_GetBackBufferWidth(), Direct3D_GetBackBufferHeight(),
+		0.0f, 0.0f,
+		0, 0,
+		0.0f, 0.0f
+	);
+	int texid = Texture_Load(L"resource/texture/ioriface.png");
+	int texid2 = Texture_Load(L"resource/texture/gagaga.png");
+	int texid_koko = Texture_Load(L"resource/texture/kokosozai.png");
 
-    // BGM再生
-    int bgmId = LoadAudio("resource/audio/mario_bgm.wav");
-    if (bgmId >= 0) {
-        PlayAudio(bgmId, true);
-    }
+	AnimPattern koko_anim01(texid_koko, 13, 0.1, { 0,0 }, { 32,32 });
+	AnimPattern koko_anim02(texid_koko, 13, 0.1, { 0,32 }, { 32,32 });
+	AnimPattern koko_anim03(texid_koko,  8, 0.1, { 0,32 * 3 }, { 32,32 });
+	AnimPattern koko_anim04(texid_koko, 15, 0.1, { 0,32 * 4 }, { 32,32 });
+	AnimPatternPlayer app01(&koko_anim01);
+	AnimPatternPlayer app02(&koko_anim02);
+	AnimPatternPlayer app03(&koko_anim03);
+	AnimPatternPlayer app04(&koko_anim04);
+	
 
-    // メインループ
-    double exec_last_time = SystemTimer_GetTime();
-    MSG msg;
-    
-    do {
-        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        } else {
-            double current_time = SystemTimer_GetTime();
-            double deltaTime = current_time - exec_last_time;
-            
-            if (deltaTime >= (1.0 / 60.0)) {
-                exec_last_time = current_time;
+	ShowWindow(hwnd, nCmdShow);
+	UpdateWindow(hwnd);
 
-                // エンジン更新
-                Engine::Time::Update(deltaTime);
-                
-                // シーン更新
-                sceneManager.Update(deltaTime);
+	SystemTimer_Initialize();
+	KeyLogger_Initialize();
+	Mouse_Initialize(hwnd);
 
-                // 描画
-                Direct3D_Clear();
-                sceneManager.Draw();
-                Direct3D_Present();
-            }
-        }
-    } while (msg.message != WM_QUIT);
+	//Mouse_SetVisible(false);
 
-    // 終了処理
-    UninitAudio();
-    Sprite_Finalize();
-    Texture_Finalize();
-    Shader_Finalize();
-    Direct3D_Finalize();
+	// 時間計測用
+	double exec_last_time = 0.0;
+	double fps_last_time = 0.0;
+	double current_time = 0.0;
+	ULONG frame_count = 0;
+	double fps = 0.0;
+	float angle = 0.0f;
+	float x{ 0.0f }, y{ 0.0f };
+	float w{ 128.0f }, h{ 128.0f };
 
-    return (int)msg.wParam;
+	exec_last_time = fps_last_time = SystemTimer_GetTime();
+	// メッセージループ
+	MSG msg;
+	do {
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {	// ウィンドウメッセージが来ていたら
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		} else {	// ゲームの処理
+			current_time = SystemTimer_GetTime();
+			double elapsed_time = current_time - fps_last_time;	// 経過時間
+			if ((elapsed_time) >= 1.0) {
+				fps = frame_count / elapsed_time;
+				fps_last_time = current_time;
+				frame_count = 0;	// カウントをクリア
+			}
+
+			elapsed_time = current_time - exec_last_time;
+			if (elapsed_time >= (1.0 / 60.0)) {	// 1/60秒ごとに実行
+				exec_last_time = current_time;	// 処理した時刻を保存
+				
+				KeyLogger_Update();
+				Mouse_State ms{};
+				Mouse_GetState(&ms);
+
+
+				Direct3D_Clear();
+
+				XINPUT_STATE xs{};
+				XInputGetState(0, &xs);
+
+				XINPUT_VIBRATION xv{};
+
+				if (xs.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
+					xv.wLeftMotorSpeed = 65535;
+					xv.wRightMotorSpeed = 65535;
+					XInputSetState(0, &xv);
+				} else {
+					XInputSetState(0, &xv);
+				}
+
+				if (KeyLogger_IsPressed(KK_D)) {
+					x += (float)(100 * elapsed_time);
+				}
+				if (KeyLogger_IsPressed(KK_A)) {
+					x -= (float)(100 * elapsed_time);
+				}
+				if (KeyLogger_IsPressed(KK_W)) {
+					y -= (float)(100 * elapsed_time);
+				}
+				if (KeyLogger_IsPressed(KK_S)) {
+					y += (float)(100 * elapsed_time);
+				}
+				if (KeyLogger_IsPressed(KK_E)) {
+					angle -= (float)(100 * elapsed_time);
+				}
+				if (KeyLogger_IsPressed(KK_Q)) {
+					angle += (float)(100 * elapsed_time);
+				}
+				if (KeyLogger_IsPressed(KK_Z)) {
+					w -= (float)(100 * elapsed_time);
+					h -= (float)(100 * elapsed_time);
+				}
+				if (KeyLogger_IsPressed(KK_C)) {
+					w += (float)(100 * elapsed_time);
+					h += (float)(100 * elapsed_time);
+				}
+
+				Sprite_Draw(texid2, 32, 64, 512, 512, 0, 0, 512, 512);
+				Sprite_Draw(texid, 32, 64, 128, 128, 0, 0, 512, 512);
+
+				Sprite_Draw(texid_koko, x, y, w, h, 0, 0, 32, 32, angle);
+
+				app01.Update(elapsed_time);
+				app02.Update(elapsed_time);
+				app03.Update(elapsed_time);
+				app04.Update(elapsed_time);
+				app01.Draw(0.0f, 0.0f, 128.0f, 128.0f);
+				app02.Draw((float)ms.x, (float)ms.y, 128.0f, 128.0f);
+				app03.Draw(512.0f, 264.0f, 128.0f, 128.0f);
+				app04.Draw(712.0f, 264.0f, 128.0f, 128.0f);
+
+				//angle += XM_PI * elapsed_time;
+
+
+
+#if defined(DEBUG) || defined(_DEBUG)
+				std::stringstream ss;
+				ss << "fps:" << fps << std::endl;
+				dt.SetText(ss.str().c_str());
+
+				dt.Draw();
+				dt.Clear();
+#endif
+
+				Direct3D_Present();
+
+				frame_count++;
+			}
+		}
+	} while (msg.message != WM_QUIT);
+
+	Sprite_Finalize();
+	Texture_Finalize();
+	Shader_Finalize();
+	Direct3D_Finalize();	// Direct3Dの終了処理
+	Mouse_Finalize();
+
+	return (int)msg.wParam;
 }
+
+
+// ウィンドウプロシージャ
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message) {
-    case WM_KEYDOWN:
-        if (wParam == VK_ESCAPE) {
-            SendMessage(hWnd, WM_CLOSE, 0, 0);
-        }
-        break;
-    case WM_CLOSE:
-        if (MessageBox(hWnd, "ゲームを終了しますか？",
-            "確認", MB_OKCANCEL | MB_DEFBUTTON2) == IDOK) {
-            DestroyWindow(hWnd);
-        }
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
+	switch (message) {
+	case WM_ACTIVATEAPP:
+		Keyboard_ProcessMessage(message, wParam, lParam);
+		Mouse_ProcessMessage(message, wParam, lParam);
+		break;
+	case WM_KEYDOWN:
+		Keyboard_ProcessMessage(message, wParam, lParam);
+		if (wParam == VK_ESCAPE) {
+			SendMessage(hWnd, WM_CLOSE, 0, 0);	//WM_CLOSEメッセージの送信
+		}
+		break;
+	case WM_SYSKEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		Keyboard_ProcessMessage(message, wParam, lParam);
+		break;
+    case WM_INPUT:
+    case WM_MOUSEMOVE:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_MOUSEWHEEL:
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONUP:
+    case WM_MOUSEHOVER:
+		Mouse_ProcessMessage(message, wParam, lParam);
+		break;
+	case WM_CLOSE:	// ウィンドウを閉じるメッセージ
+		if (MessageBox(hWnd, "本当に終了してよろしいですか？",
+			"確認", MB_OKCANCEL | MB_DEFBUTTON2) == IDOK) {
+			DestroyWindow(hWnd);	// 指定のウィンドウにWM＿DESTROYメッセージを送る
+		}
+		break;
+		//↓これ消すとプログラムを終了できない
+	case WM_DESTROY: // ウィンドウの破棄メッセージ
+		PostQuitMessage(0); // WM_QUITXメッセージの送信
+		break;
+	default:
+		// 通常のメッセージ処理はこの関数に任せる
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
 }

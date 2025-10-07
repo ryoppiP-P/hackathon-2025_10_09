@@ -13,6 +13,7 @@ using namespace DirectX;
 #include "shader.h"
 #include "debug_ostream.h"
 #include "texture.h"
+#include "sprite.h"
 
 static constexpr int NUM_VERTEX = 6; // 頂点数
 
@@ -134,12 +135,94 @@ void Sprite_Draw(
     UINT offset = 0;
     g_pContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
 
+    // 頂点シェーダーにWorld変換行列を設定
+    Shader_SetWorldMatrix(XMMatrixIdentity());
+    
     // 頂点シェーダーに変換行列を設定
-    Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f));
+    Shader_SetProjectionMatrix(XMMatrixOrthographicOffCenterLH(0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f));
 
-    static float da = 0.0f;
-    Shader_SetColor({ 1.0f, 1.0f, 1.0f, da });
-    da = std::max(da + 0.01f, 1.0f);
+    Shader_SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+
+    g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // テクスチャは外部でセット（Texture_SetTextureなど）
+    Texture_SetTexture(texid);
+
+    // ポリゴン描画命令発行
+    g_pContext->Draw(NUM_VERTEX, 0);
+}
+
+
+void Sprite_Draw(
+    int texid,
+    float x, float y, float width, float height,
+    int tx, int ty, int tw, int th, float angle,
+    XMFLOAT4 color)
+{
+    Shader_Begin();
+
+    // 頂点バッファをロックする
+    D3D11_MAPPED_SUBRESOURCE msr;
+    g_pContext->Map(g_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+
+    // 頂点バッファへの仮想ポインタを取得
+    Vertex* v = (Vertex*)msr.pData;
+
+    // 頂点情報を書き込み
+    const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
+    const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
+
+    float tsw = Texture_GetWidth(texid);
+    float tsh = Texture_GetHeight(texid);
+
+    // 4頂点分のデータを用意
+    XMFLOAT3 pos[4] = {
+        { -0.5f,      -0.5f,      0.0f }, // 左上
+        { +0.5f,  -0.5f,      0.0f }, // 右上
+        { +0.5f,  +0.5f,  0.0f }, // 右下
+        { -0.5f,      +0.5f,  0.0f }  // 左下
+    };
+
+    // 画像内の切り出し範囲をUVに変換
+    float u0 = tx / tsw;
+    float v0 = ty / tsh;
+    float u1 = (tx + tw) / tsw;
+    float v1 = (ty + th) / tsh;
+
+    XMFLOAT2 uv[4] = {
+        { u0, v0 }, // 左上
+        { u1, v0 }, // 右上
+        { u1, v1 }, // 右下
+        { u0, v1 }  // 左下
+    };
+
+    XMFLOAT4 col[4] = {
+        color, // 左上
+        color, // 右上
+        color, // 右下
+        color  // 左下
+    };
+
+    SetRectangleVerticesFrom4(v, pos, col, uv);
+
+    // 頂点バッファのロックを解除
+    g_pContext->Unmap(g_pVertexBuffer, 0);
+
+    // 頂点バッファを描画パイプラインに設定
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    g_pContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+
+    // 頂点シェーダーにWorld変換行列を設定
+    XMMATRIX s = XMMatrixScaling(width, height, 1.0f);  // ← 表示サイズを使用
+    XMMATRIX r = XMMatrixRotationZ(angle);
+    XMMATRIX t = XMMatrixTranslation(x, y, 0.0f);
+    Shader_SetWorldMatrix(s * r * t);
+
+    // 頂点シェーダーに変換行列を設定
+    Shader_SetProjectionMatrix(XMMatrixOrthographicOffCenterLH(0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f));
+
+    Shader_SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 
     g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
