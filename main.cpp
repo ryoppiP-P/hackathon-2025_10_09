@@ -25,11 +25,9 @@
 #include <DirectXMath.h>
 using namespace DirectX;
 
-
-
 //ウィンドウ情報
 static constexpr char WINDOW_CLASS[] = "GameWindow"; // x151957
-static constexpr char TITLE[] = "ウィンドウ表示";// タイトルバーのテキスト
+static constexpr char TITLE[] = "DirectX2D beta";// タイトルバーのテキスト
 
 //ウィンドウプロシージャ プロトタイプ宣言
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -55,24 +53,21 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	RegisterClassEx(&wcex);
 
 	// クライアント領域のサイズを持った（左からleft, top, right, bottom）
-	RECT window_rect = { 0, 0, 1280, 720 };
-	// ウィンドウのスタイル
-	DWORD window_style = WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+	RECT window_rect = { 0, 0, 1920, 1080 };
+	// ウィンドウのスタイル - フルスクリーン用に変更
+	DWORD window_style =/* WS_POPUP;*/ WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
 	// 指定したクライアント領域を確保するために新たな矩形座標を計算
 	AdjustWindowRect(&window_rect, window_style, FALSE);
-
-	// ウィンドウの幅と高さを算出
-	int window_width = window_rect.right - window_rect.left;
-	int window_height = window_rect.bottom - window_rect.top;
 
 	// プライマリモニターの画像解像度取得
 	int desktop_width = GetSystemMetrics(SM_CXSCREEN);
 	int desktop_height = GetSystemMetrics(SM_CYSCREEN);
 
-	// デスクトップの真ん中にウィンドウが生成されるように座標を計算
-	// ※ただし万が一、デスクトップよりウィンドウが大きい場合は左上に表示
-	int window_x = std::max((desktop_width - window_width) / 2, 0);
-	int window_y = std::max((desktop_height - window_height) / 2, 0);
+	// フルスクリーン用の設定
+	int window_width = desktop_width;
+	int window_height = desktop_height;
+	int window_x = 0;
+	int window_y = 0;
 
 
 	/* メインウィンドウの作成 */
@@ -109,18 +104,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		0, 0,
 		0.0f, 0.0f
 	);
-	int texid = Texture_Load(L"resource/texture/ioriface.png");
-	int texid2 = Texture_Load(L"resource/texture/gagaga.png");
 	int texid_koko = Texture_Load(L"resource/texture/kokosozai.png");
 
 	AnimPattern koko_anim01(texid_koko, 13, 0.1, { 0,0 }, { 32,32 });
-	AnimPattern koko_anim02(texid_koko, 13, 0.1, { 0,32 }, { 32,32 });
-	AnimPattern koko_anim03(texid_koko,  8, 0.1, { 0,32 * 3 }, { 32,32 });
-	AnimPattern koko_anim04(texid_koko, 15, 0.1, { 0,32 * 4 }, { 32,32 });
 	AnimPatternPlayer app01(&koko_anim01);
-	AnimPatternPlayer app02(&koko_anim02);
-	AnimPatternPlayer app03(&koko_anim03);
-	AnimPatternPlayer app04(&koko_anim04);
 	
 
 	ShowWindow(hwnd, nCmdShow);
@@ -128,7 +115,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	SystemTimer_Initialize();
 	KeyLogger_Initialize();
-	Mouse_Initialize(hwnd);
+	//Mouse_Initialize(hwnd);
 
 	//Mouse_SetVisible(false);
 
@@ -163,8 +150,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				exec_last_time = current_time;	// 処理した時刻を保存
 				
 				KeyLogger_Update();
-				Mouse_State ms{};
-				Mouse_GetState(&ms);
+				//Mouse_State ms{};
+				//Mouse_GetState(&ms);
 
 
 				Direct3D_Clear();
@@ -209,22 +196,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					h += (float)(100 * elapsed_time);
 				}
 
-				Sprite_Draw(texid2, 32, 64, 512, 512, 0, 0, 512, 512);
-				Sprite_Draw(texid, 32, 64, 128, 128, 0, 0, 512, 512);
-
-				Sprite_Draw(texid_koko, x, y, w, h, 0, 0, 32, 32, angle);
-
 				app01.Update(elapsed_time);
-				app02.Update(elapsed_time);
-				app03.Update(elapsed_time);
-				app04.Update(elapsed_time);
-				app01.Draw(0.0f, 0.0f, 128.0f, 128.0f);
-				app02.Draw((float)ms.x, (float)ms.y, 128.0f, 128.0f);
-				app03.Draw(512.0f, 264.0f, 128.0f, 128.0f);
-				app04.Draw(712.0f, 264.0f, 128.0f, 128.0f);
-
-				//angle += XM_PI * elapsed_time;
-
+				app01.Draw(x, y, w, h);
 
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -247,7 +220,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	Texture_Finalize();
 	Shader_Finalize();
 	Direct3D_Finalize();	// Direct3Dの終了処理
-	Mouse_Finalize();
+	//Mouse_Finalize();
 
 	return (int)msg.wParam;
 }
