@@ -40,7 +40,7 @@ HRESULT Player::Init(Map* map) {
             SetPosition(100.0f, 400.0f);
         }
     }
-
+    
     return S_OK;
 }
 
@@ -79,7 +79,7 @@ void Player::Update(double deltaTime) {
 
 void Player::Draw() {
     if (animPlayer) {
-        animPlayer->Draw(x, y, width, height);
+        animPlayer->Draw(x, y-320, width, height);
     }
 }
 
@@ -226,7 +226,6 @@ void Player::UpdateAnimation(double deltaTime) {
         targetAnim = idleAnim;
     }
 
-    // アニメーションが変わった場合は切り替え（簡潔になった！）
     animPlayer->SetPattern(targetAnim);
 
     animPlayer->Update(deltaTime);

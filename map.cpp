@@ -196,12 +196,6 @@ void Map::CreateSampleMap() {
         SetTile(11, height - 7, TileType::COIN);
         SetTile(12, height - 7, TileType::COIN);
 
-        // 土管を配置
-        if (width > 25) {
-            SetTile(25, height - 4, TileType::PIPE);
-            SetTile(25, height - 3, TileType::PIPE);
-        }
-
         // プレイヤーのスポーン位置
         SetTile(2, height - 4, TileType::PLAYER_SPAWN);
 
