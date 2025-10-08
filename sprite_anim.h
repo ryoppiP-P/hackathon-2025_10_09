@@ -43,8 +43,8 @@ public:
 
 class AnimPatternPlayer {
 private:
-	int m_pattern = 0;	// 再生するべきパターン番号
-	double m_accumulated_time = 0.0;	// 累積時間
+	int m_pattern = 0;	// 再生中のパターン番号
+	double m_accumulated_time = 0.0;	// 蓄積時間
 	AnimPattern* m_pAnimPattern = nullptr;
 
 public:
@@ -56,6 +56,30 @@ public:
 	void Update(double elapsed_time);
 
 	void Draw(float dx, float dy, float dw, float dh, DirectX::XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f });
+
+	// アニメーションパターンのゲッター・セッター
+	AnimPattern* GetCurrentPattern() const { return m_pAnimPattern; }
+	
+	void SetPattern(AnimPattern* pAnimPattern) {
+		if (m_pAnimPattern != pAnimPattern) {
+			m_pAnimPattern = pAnimPattern;
+			m_pattern = 0;  // 新しいアニメーションは最初から開始
+			m_accumulated_time = 0.0;  // 時間もリセット
+		}
+	}
+	
+	// アニメーションの状態を取得するメソッド
+	int GetCurrentFrame() const { return m_pattern; }
+	double GetAccumulatedTime() const { return m_accumulated_time; }
+	
+	// アニメーションの再生状態をリセット
+	void Reset() {
+		m_pattern = 0;
+		m_accumulated_time = 0.0;
+	}
+	
+	// アニメーションが有効かチェック
+	bool IsValid() const { return m_pAnimPattern != nullptr; }
 };
 
 #endif// SPRITE_ANIM_H

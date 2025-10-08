@@ -14,9 +14,7 @@ using namespace Microsoft::WRL;
 
 #pragma comment(lib, "d3dcompiler.lib")
 
-
-namespace hal
-{
+namespace hal {
 	std::unordered_map<std::wstring, std::tuple<ID3D11Resource*, ID3D11ShaderResourceView*>> DebugText::m_TextureMap;
 	ComPtr<ID3D11BlendState> DebugText::m_pBlendState;
 	ComPtr<ID3D11DepthStencilState> DebugText::m_pDepthStencilState;
@@ -29,8 +27,7 @@ namespace hal
 	ComPtr<ID3D11SamplerState> DebugText::m_pSamplerState;
 
 	DebugText::DebugText(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, const wchar_t* pFontTextureFileName, UINT screenWidth, UINT screenHeight, float offsetX, float offsetY, ULONG maxLine, ULONG maxCharactersPerLine, float lineSpacing, float characterSpacing)
-		: m_pDevice(pDevice), m_pContext(pContext), m_FileName(pFontTextureFileName), m_OffsetX(offsetX), m_OffsetY(offsetY), m_MaxLine(maxLine), m_MaxCharactersPerLine(maxCharactersPerLine), m_LineSpacing(lineSpacing), m_CharacterSpacing(characterSpacing)
-	{
+		: m_pDevice(pDevice), m_pContext(pContext), m_FileName(pFontTextureFileName), m_OffsetX(offsetX), m_OffsetY(offsetY), m_MaxLine(maxLine), m_MaxCharactersPerLine(maxCharactersPerLine), m_LineSpacing(lineSpacing), m_CharacterSpacing(characterSpacing) {
 		auto it = m_TextureMap.find(pFontTextureFileName);
 
 		if (it != m_TextureMap.end()) {
@@ -38,8 +35,7 @@ namespace hal
 			m_pTextureView = std::get<1>(it->second);
 			m_pTexture->AddRef();
 			m_pTextureView->AddRef();
-		}
-		else {
+		} else {
 			if (FAILED(CreateWICTextureFromFile(pDevice, pFontTextureFileName, &m_pTexture, &m_pTextureView))) {
 				MessageBoxW(nullptr, L"フォントテクスチャの読み込みに失敗しました", pFontTextureFileName, MB_OK | MB_ICONERROR);
 				return;
@@ -100,7 +96,6 @@ namespace hal
 		}
 
 		if (!m_pVertexShader) {
-
 			// 頂点シェーダーの作成
 			static const char* vs_text = R"(
 				float4x4 mtx;
@@ -122,11 +117,11 @@ namespace hal
 				VS_OUT main(VS_IN vsin)
 				{
 					VS_OUT vsout;
-    
+
 					vsout.posH = mul(vsin.posL, mtx);
 					vsout.color = vsin.color;
 					vsout.uv = vsin.uv;
-    
+
 					return vsout;
 				}
 			)";
@@ -183,7 +178,7 @@ namespace hal
 			m_pDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, m_pPixelShader.GetAddressOf());
 		}
 
-		if( !m_pSamplerState) {
+		if (!m_pSamplerState) {
 			// サンプラーステートの作成
 			D3D11_SAMPLER_DESC sampler_desc = {};
 			sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -197,31 +192,26 @@ namespace hal
 		}
 	}
 
-	DebugText::~DebugText()
-	{
+	DebugText::~DebugText() {
 		// テクスチャとテクスチャビューを解放
 		if (m_pTextureView) {
 			m_pTexture->Release();
-			if(!m_pTextureView->Release()) {
+			if (!m_pTextureView->Release()) {
 				m_TextureMap.erase(m_TextureMap.find(m_FileName));
 			}
 		}
 	}
 
-	void DebugText::SetText(const char* pText, XMFLOAT4 color)
-	{		
+	void DebugText::SetText(const char* pText, XMFLOAT4 color) {
 		m_TextLines.back().strings.emplace_back(color); // 新しい文字列を追加
 
-		for(; *pText; pText++) {
-	
+		for (; *pText; pText++) {
 			if (*pText == '\n') {
 				m_TextLines.emplace_back(); // 行を増やす
 				m_TextLines.back().strings.emplace_back(color); // 新しい文字列を追加
-			}
-			else if (*pText == '\r') {
+			} else if (*pText == '\r') {
 				// 改行コード '\r' は無視
-			}
-			else if (*pText == '\t') {
+			} else if (*pText == '\t') {
 				while (m_TextLines.back().characterCount % 4 != 0) {
 					if (m_MaxCharactersPerLine && m_TextLines.back().characterCount >= m_MaxCharactersPerLine) {
 						m_TextLines.emplace_back(); // 行を増やす
@@ -232,8 +222,7 @@ namespace hal
 					m_TextLines.back().characterCount++;
 					m_TextLines.back().spaceCount++;
 				}
-			}
-			else {
+			} else {
 				if (m_MaxCharactersPerLine && m_TextLines.back().characterCount >= m_MaxCharactersPerLine) {
 					m_TextLines.emplace_back(); // 行を増やす
 					m_TextLines.back().strings.emplace_back(color); // 新しい文字列を追加
@@ -243,8 +232,7 @@ namespace hal
 					m_TextLines.back().strings.back().characters += *pText;
 					*pText != ' ' ? m_CharacterCount++ : m_TextLines.back().spaceCount++;
 					m_TextLines.back().characterCount++;
-				}
-				else {
+				} else {
 					m_TextLines.back().strings.back().characters += '?'; // 不明な文字は '?' で置き換え
 					m_CharacterCount++;
 					m_TextLines.back().characterCount++;
@@ -254,16 +242,15 @@ namespace hal
 
 		int last_line_count = m_TextLines.back().characterCount ? 0 : -1;
 
-		while(m_MaxLine && m_TextLines.size() + last_line_count > m_MaxLine) {
+		while (m_MaxLine && m_TextLines.size() + last_line_count > m_MaxLine) {
 			ULONG remove_character_count = m_TextLines.front().characterCount - m_TextLines.front().spaceCount;
 			m_CharacterCount -= remove_character_count; // 古い行の文字数を減らす
 			m_TextLines.pop_front(); // 古い行を削除
 		}
 	}
 
-	void DebugText::Draw()
-	{
-		if( !m_CharacterCount){
+	void DebugText::Draw() {
+		if (!m_CharacterCount) {
 			return; // 描画する文字がない場合は何もしない
 		}
 
@@ -290,13 +277,10 @@ namespace hal
 		const float characterHeight = m_TextureHeight / 16.0f;
 
 		for (const auto& strings : m_TextLines) {
-
 			UINT columnCount = 0;
 
 			for (const auto& string : strings.strings) {
-
 				for (const auto& code : string.characters) {
-
 					int index = code - ' ';
 
 					if (index) {
@@ -354,7 +338,7 @@ namespace hal
 
 		// インデックスバッファを描画パイプラインに設定
 		m_pContext->IASetIndexBuffer(m_pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-		
+
 		// 頂点シェーダーを描画パイプラインに設定
 		m_pContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
 
@@ -402,15 +386,13 @@ namespace hal
 		m_pContext->RSSetState(pPreviousRasterizerState.Get());
 	}
 
-	void DebugText::Clear()
-	{
+	void DebugText::Clear() {
 		m_TextLines.clear();
 		m_TextLines.emplace_back(); // 最初の行を再度追加
 		m_CharacterCount = 0;
 	}
 
-	void DebugText::createBuffer(ULONG characterCount)
-	{
+	void DebugText::createBuffer(ULONG characterCount) {
 		// 頂点バッファ生成
 		D3D11_BUFFER_DESC bd = {};
 		bd.Usage = D3D11_USAGE_DYNAMIC;
@@ -428,5 +410,4 @@ namespace hal
 
 		m_BufferSourceCharacterCount = characterCount;
 	}
-
 }

@@ -20,6 +20,8 @@
 #include <Xinput.h>
 #pragma comment(lib, "xinput.lib")
 #include "mouse.h"
+#include "map.h"
+#include "player.h"
 
 #include <sstream>
 #include <DirectXMath.h>
@@ -28,6 +30,9 @@ using namespace DirectX;
 //ウィンドウ情報
 static constexpr char WINDOW_CLASS[] = "GameWindow"; // x151957
 static constexpr char TITLE[] = "DirectX2D beta";// タイトルバーのテキスト
+
+Map* g_pMap = nullptr;
+Player* g_pPlayer = nullptr;
 
 //ウィンドウプロシージャ プロトタイプ宣言
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -94,6 +99,17 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		} else {
 			Texture_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			Sprite_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+			// マップの初期化
+			g_pMap = new Map(50, 30, 32.0f); // 幅50、高さ30、タイルサイズ32px
+			if (FAILED(g_pMap->Init())) {
+				PostQuitMessage(0);
+			}
+
+			// プレイヤーの初期化
+			g_pPlayer = new Player();
+			if (FAILED(g_pPlayer->Init(g_pMap))) {
+				PostQuitMessage(0);
+			}
 		}
 	}
 
@@ -104,11 +120,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		0, 0,
 		0.0f, 0.0f
 	);
-	int texid_koko = Texture_Load(L"resource/texture/kokosozai.png");
-
-	AnimPattern koko_anim01(texid_koko, 13, 0.1, { 0,0 }, { 32,32 });
-	AnimPatternPlayer app01(&koko_anim01);
 	
+	g_pMap = new Map(40, 20, 32.0f);
+	g_pMap->Init();
 
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
@@ -153,51 +167,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				//Mouse_State ms{};
 				//Mouse_GetState(&ms);
 
-
 				Direct3D_Clear();
 
-				XINPUT_STATE xs{};
-				XInputGetState(0, &xs);
-
-				XINPUT_VIBRATION xv{};
-
-				if (xs.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
-					xv.wLeftMotorSpeed = 65535;
-					xv.wRightMotorSpeed = 65535;
-					XInputSetState(0, &xv);
-				} else {
-					XInputSetState(0, &xv);
-				}
-
-				if (KeyLogger_IsPressed(KK_D)) {
-					x += (float)(100 * elapsed_time);
-				}
-				if (KeyLogger_IsPressed(KK_A)) {
-					x -= (float)(100 * elapsed_time);
-				}
-				if (KeyLogger_IsPressed(KK_W)) {
-					y -= (float)(100 * elapsed_time);
-				}
-				if (KeyLogger_IsPressed(KK_S)) {
-					y += (float)(100 * elapsed_time);
-				}
-				if (KeyLogger_IsPressed(KK_E)) {
-					angle -= (float)(100 * elapsed_time);
-				}
-				if (KeyLogger_IsPressed(KK_Q)) {
-					angle += (float)(100 * elapsed_time);
-				}
-				if (KeyLogger_IsPressed(KK_Z)) {
-					w -= (float)(100 * elapsed_time);
-					h -= (float)(100 * elapsed_time);
-				}
-				if (KeyLogger_IsPressed(KK_C)) {
-					w += (float)(100 * elapsed_time);
-					h += (float)(100 * elapsed_time);
-				}
-
-				app01.Update(elapsed_time);
-				app01.Draw(x, y, w, h);
+				g_pMap->Update();
+				g_pPlayer->Update(elapsed_time);
+				g_pPlayer->Draw();
+				g_pMap->Draw();
 
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -216,6 +191,16 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		}
 	} while (msg.message != WM_QUIT);
 
+	if (g_pPlayer) {
+		g_pPlayer->Uninit();
+		delete g_pPlayer;
+		g_pPlayer = nullptr;
+	}
+	if (g_pMap) {
+		g_pMap->Uninit();
+		delete g_pMap;
+		g_pMap = nullptr;
+	}
 	Sprite_Finalize();
 	Texture_Finalize();
 	Shader_Finalize();
