@@ -21,7 +21,14 @@ Tile::Tile(TileType t) : type(t), collider(nullptr) {
         isCollidable = false;
         isVisible = true;
         break;
-    case TileType::ENEMY_SPAWN:
+    case TileType::ENEMY_SPAWN01:
+        break;
+    case TileType::ENEMY_SPAWN02:
+        break;
+    case TileType::ENEMY_SPAWN03:
+        break;
+    case TileType::ENEMY_SPAWN04:
+        break;
     case TileType::PLAYER_SPAWN:
         isCollidable = false;
         isVisible = false;
@@ -44,7 +51,7 @@ Map::~Map() {
     Uninit();
 }
 
-HRESULT Map::Init() {
+HRESULT Map::Init(MapStage stage) {
     // テクスチャの読み込み
     groundTexID = Texture_Load(L"resource/texture/kokosozai.png");
 
@@ -53,8 +60,13 @@ HRESULT Map::Init() {
     pipeTexID = groundTexID;
 
     // サンプルマップを生成
-    CreateSampleMap();
+   /* CreateSampleMap1();
+    CreateSampleMap2();*/
 
+    switch (stage) {
+    case MapStage::STAGE1: CreateSampleMap1(); break;
+    case MapStage::STAGE2: CreateSampleMap2(); break;
+    }
     // BoxColliderを生成
     CreateTileColliders();
 
@@ -262,7 +274,7 @@ std::vector<std::pair<float, float>> Map::GetEnemySpawnPositions() const {
     std::vector<std::pair<float, float>> positions;
     for (int ty = 0; ty < height; ty++) {
         for (int tx = 0; tx < width; tx++) {
-            if (tiles[ty][tx].type == TileType::ENEMY_SPAWN) {
+            if (tiles[ty][tx].type == TileType::ENEMY_SPAWN01) {
                 float x, y;
                 TileToWorld(tx, ty, x, y);
                 positions.push_back(std::make_pair(x, y));
@@ -272,6 +284,7 @@ std::vector<std::pair<float, float>> Map::GetEnemySpawnPositions() const {
     return positions;
 }
 
+<<<<<<< HEAD
 //void Map::CreateSampleMap() {
 //    for (int y = 0; y < height; y++) {
 //        for (int x = 0; x < width; x++) {
@@ -342,6 +355,40 @@ void Map::CreateSampleMap() {
         "####################.#######################################.........."
     };
 
+=======
+void Map::CreateSampleMap1() {
+    // 文字列配列でマップを定義ver
+    const char* mapData[] = {
+        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "B...............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "B......................................................BBBBB......BBBB.........BBBB.............................................B",
+        "B........BBBB.................................................................................................................G.B",
+        "B...............................................................................................................................B",
+        "B.................BBBB......BBBB......BBBB......BBBB................BBBB...................BBBBBBBBBB......................BBBBBB",
+        "B...............................................................................................................................B",
+        "B.............................................................BBBB................................................BBBB..........B",
+        "B..........BBBB.......BBBB........BBBB............................................BBBB..........................................B",
+        "B.....................................................BBBB...............................................BBBB...................B",
+        "B...............................................................................................................................B",
+        "B.....BBBB.................BBBB...............BBBB......................BBBB....................BBBB............................B",
+        "B.S.............................................................................................................................B",
+        "B...............................................................................................................................B",
+        "####################...##############......##############################.......################################........#########",
+        "####################...##############......##############################.......################################........#########",
+        "####################...##############......##############################.......################################........#########",
+    };
+
+
+>>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1
     // 配列のサイズを計算
     int mapHeight = sizeof(mapData) / sizeof(mapData[0]);
     int mapWidth = (int)strlen(mapData[0]);
@@ -369,7 +416,14 @@ void Map::CreateSampleMap() {
             case 'B': tileType = TileType::BRICK; break;
             case 'C': tileType = TileType::COIN; break;
             case 'P': tileType = TileType::PIPE; break;
+<<<<<<< HEAD
             case 'E': tileType = TileType::ENEMY_SPAWN; break;
+=======
+            case '1': tileType = TileType::ENEMY_SPAWN01; break;
+            case '2': tileType = TileType::ENEMY_SPAWN02; break;
+            case '3': tileType = TileType::ENEMY_SPAWN03; break;
+            case '4': tileType = TileType::ENEMY_SPAWN04; break;
+>>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1
             case 'G': tileType = TileType::GOAL; break;
             case 'S': tileType = TileType::PLAYER_SPAWN; break;
             default: tileType = TileType::EMPTY; break;
@@ -379,3 +433,116 @@ void Map::CreateSampleMap() {
         }
     }
 }
+<<<<<<< HEAD
+=======
+
+void Map::CreateSampleMap2() {
+    // 文字列配列でマップを定義ver
+    const char* mapData[] = {
+       "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B..............................................B",
+       "B....BBB.......BBB......BBB......BBB......BBB..B",
+       "B..............................................B",
+       "B..............................................B",
+       "B........BBB......BBB......BBB......BBB........B",
+       "B..............................................B",
+       "B..............................................B",
+       "B.....BB......BB......BB......BB......BB.......B",
+       "B.S............................................B",
+       "B..............................................B",
+       "#################################################",
+       "#################################################"
+    };
+
+
+    // 配列のサイズを計算
+    int mapHeight = sizeof(mapData) / sizeof(mapData[0]);
+    int mapWidth = (int)strlen(mapData[0]);
+
+    // マップサイズが足りない場合は既存サイズを使用
+    if (mapWidth > width) mapWidth = width;
+    if (mapHeight > height) mapHeight = height;
+
+    // まず全体を空にする
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            SetTile(x, y, TileType::EMPTY);
+        }
+    }
+
+    // 配列からマップを生成
+    for (int y = 0; y < mapHeight; y++) {
+        for (int x = 0; x < mapWidth && x < (int)strlen(mapData[y]); x++) {
+            char symbol = mapData[y][x];
+            TileType tileType = TileType::EMPTY;
+
+            switch (symbol) {
+            case '.': tileType = TileType::EMPTY; break;
+            case '#': tileType = TileType::GROUND; break;
+            case 'B': tileType = TileType::BRICK; break;
+            case 'C': tileType = TileType::COIN; break;
+            case 'P': tileType = TileType::PIPE; break;
+            case '1': tileType = TileType::ENEMY_SPAWN01; break;
+            case '2': tileType = TileType::ENEMY_SPAWN02; break;
+            case '3': tileType = TileType::ENEMY_SPAWN03; break;
+            case '4': tileType = TileType::ENEMY_SPAWN04; break;
+            case 'G': tileType = TileType::GOAL; break;
+            case 'S': tileType = TileType::PLAYER_SPAWN; break;
+            default: tileType = TileType::EMPTY; break;
+            }
+
+            SetTile(x, y, tileType);
+        }
+    }
+}
+
+/*
+void Map::CreateSampleMap() {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            SetTile(x, y, TileType::EMPTY);
+        }
+    }
+
+    for (int x = 0; x < width; x++) {
+        if (x < width - 10) {
+            SetTile(x, height - 2, TileType::GROUND);
+            SetTile(x, height - 1, TileType::GROUND);
+        }
+    }
+
+    if (width > 12 && height > 6) {
+        SetTile(10, height - 6, TileType::BRICK);
+        SetTile(11, height - 6, TileType::BRICK);
+        SetTile(12, height - 6, TileType::BRICK);
+
+        SetTile(15, height - 4, TileType::BRICK);
+        SetTile(16, height - 4, TileType::BRICK);
+
+        SetTile(10, height - 7, TileType::COIN);
+        SetTile(11, height - 7, TileType::COIN);
+        SetTile(12, height - 7, TileType::COIN);
+
+        SetTile(2, height - 4, TileType::PLAYER_SPAWN);
+
+        if (width > 20) SetTile(20, height - 3, TileType::ENEMY_SPAWN);
+        if (width > 30) SetTile(30, height - 3, TileType::ENEMY_SPAWN);
+
+        SetTile(width - 5, height - 3, TileType::GOAL);
+    }
+}
+*/
+>>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1

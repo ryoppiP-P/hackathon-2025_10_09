@@ -14,9 +14,12 @@ enum class TileType : int {
     BRICK = 2,      // ブロック
     COIN = 3,       // コイン
     PIPE = 4,       // 土管
-    ENEMY_SPAWN = 5, // 敵の出現位置
-    GOAL = 6,       // ゴール
-    PLAYER_SPAWN = 7 // プレイヤーの初期位置
+    ENEMY_SPAWN01 = 5, // 敵1の出現位置
+    ENEMY_SPAWN02 = 6, // 敵2の出現位置
+    ENEMY_SPAWN03 = 7, // 敵3の出現位置
+    ENEMY_SPAWN04 = 8, // 敵4の出現位置
+    GOAL = 9,       // ゴール
+    PLAYER_SPAWN = 10 // プレイヤーの初期位置
 };
 
 // タイル情報を保持する構造体
@@ -28,6 +31,12 @@ struct Tile {
 
     Tile(TileType t = TileType::EMPTY);
     ~Tile();
+};
+
+// map.h に追加
+enum class MapStage {
+    STAGE1,
+    STAGE2
 };
 
 class Map {
@@ -54,7 +63,7 @@ public:
     ~Map();
 
     // 初期化・終了処理
-    HRESULT Init();
+    HRESULT Init(MapStage stage);
     void Uninit();
     void Update();
     void Draw();
@@ -81,7 +90,8 @@ public:
     void ClearColliders();          // コライダー削除
 
     // サンプルマップの生成
-    void CreateSampleMap();
+    void CreateSampleMap1();
+    void CreateSampleMap2();
 
     // ゲッター
     int GetWidth() const { return width; }
