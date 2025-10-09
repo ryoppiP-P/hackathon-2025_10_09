@@ -101,11 +101,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			Texture_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			Sprite_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			// マップの初期化
-			g_pMap = new Map(1000, 30, 32.0f);
-			if (FAILED(g_pMap->Init())) {
+			g_pMap = new Map(130, 30, 32.0f);
+			/*if (FAILED(g_pMap->Init())) {
+				PostQuitMessage(0);
+			}*/
+			if (FAILED(g_pMap->Init(MapStage::STAGE1))) {
 				PostQuitMessage(0);
 			}
-
+			
 			// プレイヤーの初期化
 			g_pPlayer = new Player();
 			if (FAILED(g_pPlayer->Init(g_pMap))) {

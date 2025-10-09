@@ -160,6 +160,7 @@ void Player::OnTriggerWithCoin(const CollisionInfo& info) {
 
 void Player::OnTriggerWithGoal(const CollisionInfo& info) {
     // ゴールに到達した処理
+
 }
 
 // 旧システムの互換性維持

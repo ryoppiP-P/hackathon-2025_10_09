@@ -33,6 +33,12 @@ struct Tile {
     ~Tile();
 };
 
+// map.h に追加
+enum class MapStage {
+    STAGE1,
+    STAGE2
+};
+
 class Map {
 private:
     int width = 0;          // マップの幅（タイル数）
@@ -57,7 +63,7 @@ public:
     ~Map();
 
     // 初期化・終了処理
-    HRESULT Init();
+    HRESULT Init(MapStage stage);
     void Uninit();
     void Update();
     void Draw();
@@ -84,7 +90,8 @@ public:
     void ClearColliders();          // コライダー削除
 
     // サンプルマップの生成
-    void CreateSampleMap();
+    void CreateSampleMap1();
+    void CreateSampleMap2();
 
     // ゲッター
     int GetWidth() const { return width; }
