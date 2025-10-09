@@ -74,7 +74,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	int window_x = 0;
 	int window_y = 0;
 
-	//lkl
+	//K2asai10@gmail.com
+
 	/* メインウィンドウの作成 */
 	HWND hwnd = CreateWindow(
 		WINDOW_CLASS, 
