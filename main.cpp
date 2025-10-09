@@ -101,7 +101,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			Texture_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			Sprite_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			// ƒ}ƒbƒv‚Ì‰Šú‰»
-			g_pMap = new Map(40, 20, 32.0f);
+			g_pMap = new Map(1000, 30, 32.0f);
 			if (FAILED(g_pMap->Init())) {
 				PostQuitMessage(0);
 			}

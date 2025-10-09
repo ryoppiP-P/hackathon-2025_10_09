@@ -14,9 +14,12 @@ enum class TileType : int {
     BRICK = 2,      // ブロック
     COIN = 3,       // コイン
     PIPE = 4,       // 土管
-    ENEMY_SPAWN = 5, // 敵の出現位置
-    GOAL = 6,       // ゴール
-    PLAYER_SPAWN = 7 // プレイヤーの初期位置
+    ENEMY_SPAWN01 = 5, // 敵1の出現位置
+    ENEMY_SPAWN02 = 6, // 敵2の出現位置
+    ENEMY_SPAWN03 = 7, // 敵3の出現位置
+    ENEMY_SPAWN04 = 8, // 敵4の出現位置
+    GOAL = 9,       // ゴール
+    PLAYER_SPAWN = 10 // プレイヤーの初期位置
 };
 
 // タイル情報を保持する構造体
