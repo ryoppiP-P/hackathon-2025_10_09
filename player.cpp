@@ -107,7 +107,7 @@ void Player::Update(double deltaTime) {
 
 void Player::Draw() {
     if (animPlayer) {
-        animPlayer->Draw(x, (y - 0) - 4, width, height);
+        animPlayer->Draw(x, y - 4, width, height);
     }
 }
 
