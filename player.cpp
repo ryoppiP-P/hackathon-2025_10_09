@@ -1,5 +1,6 @@
 #include "player.h"
 #include "texture.h"
+#include "camera.h"
 #include <algorithm>
 
 Player::Player()
@@ -105,9 +106,22 @@ void Player::Update(double deltaTime) {
     UpdateAnimation(deltaTime);
 }
 
+// DrawŠÖ”
 void Player::Draw() {
     if (animPlayer) {
-        animPlayer->Draw(x, y - 4, width, height);
+        float drawX, drawY, drawW, drawH;
+        
+        if (g_pCamera) {
+            g_pCamera->GetDrawPosition(x, y - 4, drawX, drawY);
+            g_pCamera->GetDrawSize(width, height, drawW, drawH);
+        } else {
+            drawX = x;
+            drawY = y - 4;
+            drawW = width;
+            drawH = height;
+        }
+
+        animPlayer->Draw(drawX, drawY, drawW, drawH);
     }
 }
 

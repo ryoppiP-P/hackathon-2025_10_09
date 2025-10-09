@@ -22,6 +22,8 @@
 #include "mouse.h"
 #include "map.h"
 #include "player.h"
+#include "camera.h"
+#include "scene.h"
 
 #include <sstream>
 #include <DirectXMath.h>
@@ -33,6 +35,12 @@ static constexpr char TITLE[] = "DirectX2D beta";// タイトルバーのテキスト
 
 Map* g_pMap = nullptr;
 Player* g_pPlayer = nullptr;
+
+// シーン制御
+static Scene g_Scene = SCENE_TITLE;
+static Scene g_NextScene = SCENE_TITLE;
+static bool g_ChangeRequest = false;
+
 
 //ウィンドウプロシージャ プロトタイプ宣言
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -74,8 +82,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	int window_x = 0;
 	int window_y = 0;
 
-	//K2asai10@gmail.com
-
 	/* メインウィンドウの作成 */
 	HWND hwnd = CreateWindow(
 		WINDOW_CLASS, 
@@ -101,7 +107,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			Texture_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			Sprite_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			// マップの初期化
-			g_pMap = new Map(40, 20, 32.0f);
+			g_pMap = new Map(400, 30, 32.0f);
 			if (FAILED(g_pMap->Init())) {
 				PostQuitMessage(0);
 			}
@@ -111,6 +117,19 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			if (FAILED(g_pPlayer->Init(g_pMap))) {
 				PostQuitMessage(0);
 			}
+
+			// カメラの初期化
+			g_pCamera = new Camera();
+			if (FAILED(g_pCamera->Init(1920, 1080))) {
+				PostQuitMessage(0);
+			}
+
+			// カメラにプレイヤーを設定
+			g_pCamera->SetTarget(g_pPlayer);
+
+			// マップサイズに応じてカメラの移動範囲を設定
+			float mapPixelWidth = g_pMap->GetWidth() * g_pMap->GetTileSize();
+			float mapPixelHeight = g_pMap->GetHeight() * g_pMap->GetTileSize();
 		}
 	}
 
@@ -121,11 +140,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		0, 0,
 		0.0f, 0.0f
 	);
-
-	//abc
-	//sdfghjk
-
-	//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
@@ -143,6 +157,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	exec_last_time = fps_last_time = SystemTimer_GetTime();
 	// メッセージループ
 	MSG msg;
+	bool sceneInitialized = false;
+
 	do {
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {	// ウィンドウメッセージが来ていたら
 			TranslateMessage(&msg);
@@ -161,21 +177,143 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				exec_last_time = current_time;	// 処理した時刻を保存
 
 				Direct3D_Clear();
+				KeyLogger_Update();
 
-				g_pMap->Update();
-				g_pPlayer->Update(elapsed_time);
+				// シーン変更チェック
+				if (g_ChangeRequest) {
+					// 現在のシーンの終了処理
+					switch (g_Scene) {
+					case SCENE_TITLE:
+						Title_Finalize();
+						break;
+					case SCENE_GAME_ZAKO:
+						if (g_pPlayer) {
+							g_pPlayer->Uninit();
+							delete g_pPlayer;
+							g_pPlayer = nullptr;
+						}
+						if (g_pMap) {
+							g_pMap->Uninit();
+							delete g_pMap;
+							g_pMap = nullptr;
+						}
+						if (g_pCamera) {
+							g_pCamera->Uninit();
+							delete g_pCamera;
+							g_pCamera = nullptr;
+						}
+						break;
+					case SCENE_RESULT:
+						Result_Finalize();
+						break;
+					}
+
+					// シーン切り替え
+					Scene_ChangeScene();
+					sceneInitialized = false;
+					g_ChangeRequest = false;
+				}
+
+				// 新しいシーンの初期化（一度だけ）
+				if (!sceneInitialized) {
+					switch (g_Scene) {
+					case SCENE_TITLE:
+						Title_Initialize();
+						break;
+					case SCENE_GAME_ZAKO:
+						// マップの初期化
+						g_pMap = new Map(400, 30, 32.0f);
+						if (FAILED(g_pMap->Init())) {
+							PostQuitMessage(0);
+						}
+
+						// プレイヤーの初期化
+						g_pPlayer = new Player();
+						if (FAILED(g_pPlayer->Init(g_pMap))) {
+							PostQuitMessage(0);
+						}
+
+						// カメラの初期化
+						g_pCamera = new Camera();
+						if (FAILED(g_pCamera->Init(1920, 1080))) {
+							PostQuitMessage(0);
+						}
+
+						// カメラにプレイヤーを設定
+						g_pCamera->SetTarget(g_pPlayer);
+						
+						// 境界制限を設定
+						g_pCamera->SetBoundsFromMap(g_pMap);
+
+						break;
+					case SCENE_RESULT:
+						Result_Initialize();
+						break;
+					}
+					sceneInitialized = true;
+				}
+
+				// 現在のシーンの更新
+				switch (g_Scene) {
+				case SCENE_TITLE:
+					Title_Update(elapsed_time);
+					break;
+				case SCENE_GAME_ZAKO:
+					if (g_pMap) g_pMap->Update();
+					if (g_pPlayer) g_pPlayer->Update(elapsed_time);
+					if (g_pCamera) g_pCamera->Update(elapsed_time);
+
+					if (KeyLogger_IsPressed(KK_F1)) {
+						Scene_SetNextScene(SCENE_RESULT);
+					}
+					break;
+				case SCENE_RESULT:
+					Result_Update(elapsed_time);
+					break;
+				}
 				
 				BoxCollider::UpdateAllCollisions();
 
-				g_pPlayer->Draw();
-				g_pMap->Draw();
-
+				// 描画
+				switch (g_Scene) {
+				case SCENE_TITLE:
+					Title_Draw();
+					break;
+				case SCENE_GAME_ZAKO:
+					if (g_pMap) g_pMap->Draw();
+					if (g_pPlayer) g_pPlayer->Draw();
+					break;
+				case SCENE_RESULT:
+					Result_Draw();
+					break;
+				}
 
 #if defined(DEBUG) || defined(_DEBUG)
 				std::stringstream ss;
-				ss << "fps:" << fps << std::endl;
-				dt.SetText(ss.str().c_str());
+				ss << "FPS: " << fps << std::endl;
+				ss << "Scene: " << g_Scene << std::endl;  // 現在のシーンを表示
 
+				if (g_pPlayer) {
+					float px, py;
+					g_pPlayer->GetPosition(px, py);
+					ss << "Player: (" << (int)px << ", " << (int)py << ")" << std::endl;
+				}
+
+				if (g_pCamera) {
+					float cx, cy;
+					g_pCamera->GetPosition(cx, cy);
+					ss << "Camera: (" << (int)cx << ", " << (int)cy << ")" << std::endl;
+
+					if (g_pPlayer) {
+						float px, py, drawX, drawY;
+						g_pPlayer->GetPosition(px, py);
+						g_pCamera->GetDrawPosition(px, py, drawX, drawY);
+						ss << "Player Screen: (" << (int)drawX << ", " << (int)drawY << ")" << std::endl;
+						ss << "Expected Center: (960, 540)" << std::endl;
+					}
+				}
+
+				dt.SetText(ss.str().c_str());
 				dt.Draw();
 				dt.Clear();
 #endif
@@ -196,6 +334,11 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		g_pMap->Uninit();
 		delete g_pMap;
 		g_pMap = nullptr;
+	}
+	if (g_pCamera) {
+		g_pCamera->Uninit();
+		delete g_pCamera;
+		g_pCamera = nullptr;
 	}
 	Sprite_Finalize();
 	Texture_Finalize();
@@ -257,4 +400,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
-//test
+
+void Scene_SetNextScene(Scene scene) {
+	g_NextScene = scene;
+	g_ChangeRequest = true;
+}
+
+void Scene_ChangeScene() {
+	// シーンの切り替え
+ 	g_Scene = g_NextScene;
+}
+
+Scene Scene_GetCurrentScene() {
+	return g_Scene;
+}
