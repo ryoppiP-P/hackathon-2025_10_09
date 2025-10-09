@@ -16,7 +16,6 @@ BoxCollider::BoxCollider(float w, float h, ColliderType t)
 }
 
 BoxCollider::~BoxCollider() {
-    // vectorから自分を削除
     auto it = std::find(allColliders.begin(), allColliders.end(), this);
     if (it != allColliders.end()) {
         allColliders.erase(it);
@@ -138,8 +137,6 @@ CollisionInfo BoxCollider::SweepTest(float deltaX, float deltaY, const BoxCollid
 
     if (tempCollider.CheckCollision(other)) {
         info = tempCollider.GetCollisionInfo(other);
-        // 移動量から衝突時間を逆算（簡易版）
-        // より正確な実装では連続的な衝突検出が必要
     }
 
     return info;

@@ -126,9 +126,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	SystemTimer_Initialize();
 	KeyLogger_Initialize();
-	//Mouse_Initialize(hwnd);
-
-	//Mouse_SetVisible(false);
 
 	// ŠÔŒv‘ª—p
 	double exec_last_time = 0.0;
@@ -156,10 +153,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			elapsed_time = current_time - exec_last_time;
 			if (elapsed_time >= (1.0 / 60.0)) {	// 1/60•b‚²‚Æ‚ÉÀs
 				exec_last_time = current_time;	// ˆ—‚µ‚½‚ğ•Û‘¶
-				
-				//KeyLogger_Update();
-				//Mouse_State ms{};
-				//Mouse_GetState(&ms);
 
 				Direct3D_Clear();
 
