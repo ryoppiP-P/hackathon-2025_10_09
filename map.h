@@ -22,53 +22,27 @@ enum class TileType : int {
 // タイル情報を保持する構造体
 struct Tile {
     TileType type;
-    bool isCollidable;  // 当たり判定があるか
-    bool isVisible;     // 描画するか
+    bool isCollidable = false;  // 当たり判定があるか
+    bool isVisible = false;     // 描画するか
     BoxCollider* collider;  // 各タイルのコライダー
 
-    //Tile(TileType t = TileType::EMPTY) : type(t) {
-    //    // タイプに応じて当たり判定と可視性を設定
-    //    switch (t) {
-    //    case TileType::EMPTY:
-    //        isCollidable = false;
-    //        isVisible = false;
-    //        break;
-    //    case TileType::GROUND:
-    //    case TileType::BRICK:
-    //    case TileType::PIPE:
-    //        isCollidable = true;
-    //        isVisible = true;
-    //        break;
-    //    case TileType::COIN:
-    //    case TileType::GOAL:
-    //        isCollidable = false;
-    //        isVisible = true;
-    //        break;
-    //    case TileType::ENEMY_SPAWN:
-    //    case TileType::PLAYER_SPAWN:
-    //        isCollidable = false;
-    //        isVisible = false;
-    //        break;
-    //    }
-    //}
     Tile(TileType t = TileType::EMPTY);
     ~Tile();
 };
 
 class Map {
 private:
-    int width;          // マップの幅（タイル数）
-    int height;         // マップの高さ（タイル数）
-    float tileSize;     // 1タイルのサイズ（ピクセル）
+    int width = 0;          // マップの幅（タイル数）
+    int height = 0;         // マップの高さ（タイル数）
+    float tileSize= 0.0f;     // 1タイルのサイズ（ピクセル）
 
     std::vector<std::vector<Tile>> tiles;  // 2次元配列でタイルを管理
 
     // 各タイル用のテクスチャID
-    int groundTexID;
-    int brickTexID;
-    int coinTexID;
-    int pipeTexID;
-    int dummyTexID;     // デバッグ用の単色テクスチャ
+    int groundTexID = 0;
+    int brickTexID = 0;
+    int coinTexID = 0;
+    int pipeTexID = 0;
 
     // コライダー管理
     std::vector<BoxCollider*> mapColliders;    // 地面・壁用

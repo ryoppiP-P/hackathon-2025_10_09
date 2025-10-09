@@ -9,8 +9,8 @@ Player::Player()
     , isOnGround(false), canJump(false)
     , animPlayer(nullptr), idleAnim(nullptr), walkAnim(nullptr), jumpAnim(nullptr)
     , mapRef(nullptr), collider(nullptr)
-    , collisionOffsetX(2.0f), collisionOffsetY(2.0f)
-    , collisionWidth(24.0f), collisionHeight(28.0f) {
+    , collisionOffsetX(2.0f), collisionOffsetY(0.0f)
+    , collisionWidth(24.0f), collisionHeight(26.0f) {
 }
 
 Player::~Player() {
@@ -107,15 +107,8 @@ void Player::Update(double deltaTime) {
 
 void Player::Draw() {
     if (animPlayer) {
-        animPlayer->Draw(x, y - 320, width, height);
+        animPlayer->Draw(x, (y - 320) - 4, width, height);
     }
-
-    // デバッグ用：当たり判定ボックス表示
-#ifdef _DEBUG
-    if (collider) {
-        collider->DrawDebug(1.0f, 0.0f, 0.0f, 0.5f);
-    }
-#endif
 }
 
 void Player::SetPosition(float px, float py) {
@@ -163,13 +156,10 @@ void Player::OnCollisionWithMap(const CollisionInfo& info) {
 
 void Player::OnTriggerWithCoin(const CollisionInfo& info) {
     // コインを取得した処理
-    // info.other->SetEnabled(false); // コインを無効化
-    // TODO: スコア加算、サウンド再生など
 }
 
 void Player::OnTriggerWithGoal(const CollisionInfo& info) {
     // ゴールに到達した処理
-    // TODO: ステージクリア処理
 }
 
 // 旧システムの互換性維持

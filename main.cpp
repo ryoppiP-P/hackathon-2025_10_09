@@ -139,10 +139,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	double current_time = 0.0;
 	ULONG frame_count = 0;
 	double fps = 0.0;
-	float angle = 0.0f;
-	float x{ 0.0f }, y{ 0.0f };
-	float w{ 128.0f }, h{ 128.0f };
-
+	
 	exec_last_time = fps_last_time = SystemTimer_GetTime();
 	// メッセージループ
 	MSG msg;

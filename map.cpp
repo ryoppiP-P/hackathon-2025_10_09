@@ -45,12 +45,11 @@ Map::~Map() {
 
 HRESULT Map::Init() {
     // テクスチャの読み込み
-    dummyTexID = Texture_Load(L"resource/texture/kokosozai.png");
+    groundTexID = Texture_Load(L"resource/texture/kokosozai.png");
 
-    groundTexID = dummyTexID;
-    brickTexID = dummyTexID;
-    coinTexID = dummyTexID;
-    pipeTexID = dummyTexID;
+    brickTexID = groundTexID;
+    coinTexID = groundTexID;
+    pipeTexID = groundTexID;
 
     // サンプルマップを生成
     CreateSampleMap();
@@ -77,7 +76,7 @@ void Map::Draw() {
             float worldX = (float)x * tileSize;
             float worldY = (float)y * tileSize;
 
-            int texID = dummyTexID;
+            int texID = groundTexID;
             DirectX::XMFLOAT4 color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
             switch (tiles[y][x].type) {
@@ -98,7 +97,7 @@ void Map::Draw() {
                 color = DirectX::XMFLOAT4(0.2f, 0.8f, 0.2f, 1.0f);
                 break;
             case TileType::GOAL:
-                texID = dummyTexID;
+                texID = pipeTexID;
                 color = DirectX::XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
                 break;
             }
