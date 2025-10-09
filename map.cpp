@@ -284,78 +284,6 @@ std::vector<std::pair<float, float>> Map::GetEnemySpawnPositions() const {
     return positions;
 }
 
-<<<<<<< HEAD
-//void Map::CreateSampleMap() {
-//    for (int y = 0; y < height; y++) {
-//        for (int x = 0; x < width; x++) {
-//            SetTile(x, y, TileType::EMPTY);
-//        }
-//    }
-//
-//    for (int x = 0; x < width; x++) {
-//        if (x < width - 10) {
-//            SetTile(x, height - 2, TileType::GROUND);
-//            SetTile(x, height - 1, TileType::GROUND);
-//        }
-//    }
-//
-//    if (width > 12 && height > 6) {
-//        SetTile(10, height - 6, TileType::BRICK);
-//        SetTile(11, height - 6, TileType::BRICK);
-//        SetTile(12, height - 6, TileType::BRICK);
-//
-//        SetTile(15, height - 4, TileType::BRICK);
-//        SetTile(16, height - 4, TileType::BRICK);
-//
-//        SetTile(10, height - 7, TileType::COIN);
-//        SetTile(11, height - 7, TileType::COIN);
-//        SetTile(12, height - 7, TileType::COIN);
-//
-//        SetTile(2, height - 4, TileType::PLAYER_SPAWN);
-//
-//        if (width > 20) SetTile(20, height - 3, TileType::ENEMY_SPAWN);
-//        if (width > 30) SetTile(30, height - 3, TileType::ENEMY_SPAWN);
-//
-//        SetTile(width - 5, height - 3, TileType::GOAL);
-//    }
-//}
-
-void Map::CreateSampleMap() {
-    // 文字列配列でマップを定義ver
-    const char* mapData[] = {
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......................................................................",
-        "......CCC.............................................................",
-        "......BBB.............................................................",
-        "..........................G...........................................",
-        "S.E...............BB..................................................",
-        "####################.#######################################..........",
-        "####################.#######################################..........",
-        "####################.#######################################.........."
-    };
-
-=======
 void Map::CreateSampleMap1() {
     // 文字列配列でマップを定義ver
     const char* mapData[] = {
@@ -387,8 +315,6 @@ void Map::CreateSampleMap1() {
         "####################...##############......##############################.......################################........#########",
     };
 
-
->>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1
     // 配列のサイズを計算
     int mapHeight = sizeof(mapData) / sizeof(mapData[0]);
     int mapWidth = (int)strlen(mapData[0]);
@@ -416,14 +342,10 @@ void Map::CreateSampleMap1() {
             case 'B': tileType = TileType::BRICK; break;
             case 'C': tileType = TileType::COIN; break;
             case 'P': tileType = TileType::PIPE; break;
-<<<<<<< HEAD
-            case 'E': tileType = TileType::ENEMY_SPAWN; break;
-=======
             case '1': tileType = TileType::ENEMY_SPAWN01; break;
             case '2': tileType = TileType::ENEMY_SPAWN02; break;
             case '3': tileType = TileType::ENEMY_SPAWN03; break;
             case '4': tileType = TileType::ENEMY_SPAWN04; break;
->>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1
             case 'G': tileType = TileType::GOAL; break;
             case 'S': tileType = TileType::PLAYER_SPAWN; break;
             default: tileType = TileType::EMPTY; break;
@@ -433,9 +355,6 @@ void Map::CreateSampleMap1() {
         }
     }
 }
-<<<<<<< HEAD
-=======
-
 void Map::CreateSampleMap2() {
     // 文字列配列でマップを定義ver
     const char* mapData[] = {
@@ -508,41 +427,3 @@ void Map::CreateSampleMap2() {
         }
     }
 }
-
-/*
-void Map::CreateSampleMap() {
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            SetTile(x, y, TileType::EMPTY);
-        }
-    }
-
-    for (int x = 0; x < width; x++) {
-        if (x < width - 10) {
-            SetTile(x, height - 2, TileType::GROUND);
-            SetTile(x, height - 1, TileType::GROUND);
-        }
-    }
-
-    if (width > 12 && height > 6) {
-        SetTile(10, height - 6, TileType::BRICK);
-        SetTile(11, height - 6, TileType::BRICK);
-        SetTile(12, height - 6, TileType::BRICK);
-
-        SetTile(15, height - 4, TileType::BRICK);
-        SetTile(16, height - 4, TileType::BRICK);
-
-        SetTile(10, height - 7, TileType::COIN);
-        SetTile(11, height - 7, TileType::COIN);
-        SetTile(12, height - 7, TileType::COIN);
-
-        SetTile(2, height - 4, TileType::PLAYER_SPAWN);
-
-        if (width > 20) SetTile(20, height - 3, TileType::ENEMY_SPAWN);
-        if (width > 30) SetTile(30, height - 3, TileType::ENEMY_SPAWN);
-
-        SetTile(width - 5, height - 3, TileType::GOAL);
-    }
-}
-*/
->>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1

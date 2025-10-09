@@ -22,12 +22,9 @@
 #include "mouse.h"
 #include "map.h"
 #include "player.h"
-<<<<<<< HEAD
 #include "camera.h"
 #include "scene.h"
-=======
 #include "enemy.h"
->>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1
 
 #include <sstream>
 #include <DirectXMath.h>
@@ -112,16 +109,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			Texture_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			Sprite_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			// マップの初期化
-<<<<<<< HEAD
-			g_pMap = new Map(400, 30, 32.0f);
-			if (FAILED(g_pMap->Init())) {
-=======
 			g_pMap = new Map(130, 30, 32.0f);
-			/*if (FAILED(g_pMap->Init())) {
-				PostQuitMessage(0);
-			}*/
 			if (FAILED(g_pMap->Init(MapStage::STAGE1))) {
->>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1
 				PostQuitMessage(0);
 			}
 			
@@ -130,7 +119,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			if (FAILED(g_pPlayer->Init(g_pMap))) {
 				PostQuitMessage(0);
 			}
-<<<<<<< HEAD
 
 			// カメラの初期化
 			g_pCamera = new Camera();
@@ -144,7 +132,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			// マップサイズに応じてカメラの移動範囲を設定
 			float mapPixelWidth = g_pMap->GetWidth() * g_pMap->GetTileSize();
 			float mapPixelHeight = g_pMap->GetHeight() * g_pMap->GetTileSize();
-=======
  
 			for (int i = 0; i < ENEMY_MAX; i++)
 			{
@@ -153,7 +140,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					PostQuitMessage(0);
 				}
 			}
->>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1
 		}
 	}
 
@@ -203,7 +189,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				Direct3D_Clear();
 				KeyLogger_Update();
 
-<<<<<<< HEAD
 				// シーン変更チェック
 				if (g_ChangeRequest) {
 					// 現在のシーンの終了処理
@@ -248,7 +233,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					case SCENE_GAME_ZAKO:
 						// マップの初期化
 						g_pMap = new Map(400, 30, 32.0f);
-						if (FAILED(g_pMap->Init())) {
+						if (FAILED(g_pMap->Init(MapStage::STAGE1))) {
 							PostQuitMessage(0);
 						}
 
@@ -288,6 +273,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 					if (g_pPlayer) g_pPlayer->Update(elapsed_time);
 					if (g_pCamera) g_pCamera->Update(elapsed_time);
 
+					for (int i = 0; i < ENEMY_MAX; i++) {
+						if (g_pEnemy[i]) {
+							if (g_pEnemy[i]->GetIsUse()) {
+								g_pEnemy[i]->Update(elapsed_time);
+							}
+						}
+					}
+
 					if (KeyLogger_IsPressed(KK_F1)) {
 						Scene_SetNextScene(SCENE_RESULT);
 					}
@@ -295,25 +288,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				case SCENE_RESULT:
 					Result_Update(elapsed_time);
 					break;
-=======
-				g_pMap->Update();
-				g_pPlayer->Update(elapsed_time);
-
-				for (int i = 0; i < ENEMY_MAX; i++)
-				{
-					if (g_pEnemy[i])
-					{
-						if (g_pEnemy[i]->GetIsUse())
-						{
-							g_pEnemy[i]->Update(elapsed_time);
-						}
-					}
->>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1
 				}
 				
 				BoxCollider::UpdateAllCollisions();
 
-<<<<<<< HEAD
 				// 描画
 				switch (g_Scene) {
 				case SCENE_TITLE:
@@ -322,27 +300,18 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 				case SCENE_GAME_ZAKO:
 					if (g_pMap) g_pMap->Draw();
 					if (g_pPlayer) g_pPlayer->Draw();
+					for (int i = 0; i < ENEMY_MAX; i++) {
+						if (g_pEnemy[i]) {
+							if (g_pEnemy[i]->GetIsUse()) {
+								g_pEnemy[i]->Draw();
+							}
+						}
+					}
 					break;
 				case SCENE_RESULT:
 					Result_Draw();
 					break;
 				}
-=======
-				g_pPlayer->Draw();
-				g_pMap->Draw();
-
-				for (int i = 0; i < ENEMY_MAX; i++)
-				{
-					if (g_pEnemy[i])
-					{
-						if (g_pEnemy[i]->GetIsUse())
-						{
-							g_pEnemy[i]->Draw();
-						}
-					}
-				}
-
->>>>>>> 7af28c146c241fe12d89092bfc43f3fb843f69b1
 
 #if defined(DEBUG) || defined(_DEBUG)
 				std::stringstream ss;
