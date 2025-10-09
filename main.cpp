@@ -22,6 +22,7 @@
 #include "mouse.h"
 #include "map.h"
 #include "player.h"
+#include "enemy.h"
 
 #include <sstream>
 #include <DirectXMath.h>
@@ -33,6 +34,7 @@ static constexpr char TITLE[] = "DirectX2D beta";// タイトルバーのテキスト
 
 Map* g_pMap = nullptr;
 Player* g_pPlayer = nullptr;
+Enemy* g_pEnemy[ENEMY_MAX] = {};
 
 //ウィンドウプロシージャ プロトタイプ宣言
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -114,6 +116,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			if (FAILED(g_pPlayer->Init(g_pMap))) {
 				PostQuitMessage(0);
 			}
+ 
+			for (int i = 0; i < ENEMY_MAX; i++)
+			{
+				g_pEnemy[i] = new Enemy();
+				if (FAILED(g_pEnemy[i]->Init(g_pMap))) {
+					PostQuitMessage(0);
+				}
+			}
 		}
 	}
 
@@ -167,11 +177,33 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 				g_pMap->Update();
 				g_pPlayer->Update(elapsed_time);
+
+				for (int i = 0; i < ENEMY_MAX; i++)
+				{
+					if (g_pEnemy[i])
+					{
+						if (g_pEnemy[i]->GetIsUse())
+						{
+							g_pEnemy[i]->Update(elapsed_time);
+						}
+					}
+				}
 				
 				BoxCollider::UpdateAllCollisions();
 
 				g_pPlayer->Draw();
 				g_pMap->Draw();
+
+				for (int i = 0; i < ENEMY_MAX; i++)
+				{
+					if (g_pEnemy[i])
+					{
+						if (g_pEnemy[i]->GetIsUse())
+						{
+							g_pEnemy[i]->Draw();
+						}
+					}
+				}
 
 
 #if defined(DEBUG) || defined(_DEBUG)
