@@ -100,7 +100,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			Texture_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			Sprite_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 			// マップの初期化
-			g_pMap = new Map(50, 30, 32.0f); // 幅50、高さ30、タイルサイズ32px
+			g_pMap = new Map(40, 20, 32.0f);
 			if (FAILED(g_pMap->Init())) {
 				PostQuitMessage(0);
 			}
@@ -120,9 +120,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		0, 0,
 		0.0f, 0.0f
 	);
-	
-	g_pMap = new Map(40, 20, 32.0f);
-	g_pMap->Init();
 
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
@@ -160,7 +157,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			if (elapsed_time >= (1.0 / 60.0)) {	// 1/60秒ごとに実行
 				exec_last_time = current_time;	// 処理した時刻を保存
 				
-				KeyLogger_Update();
+				//KeyLogger_Update();
 				//Mouse_State ms{};
 				//Mouse_GetState(&ms);
 
