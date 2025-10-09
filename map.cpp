@@ -2,9 +2,37 @@
 #include "texture.h"
 #include <DirectXMath.h>
 
+// Tileコンストラクタ・デストラクタ
+Tile::Tile(TileType t) : type(t), collider(nullptr) {
+    switch (t) {
+    case TileType::EMPTY:
+        isCollidable = false;
+        isVisible = false;
+        break;
+    case TileType::GROUND:
+    case TileType::BRICK:
+    case TileType::PIPE:
+        isCollidable = true;
+        isVisible = true;
+        break;
+    case TileType::COIN:
+    case TileType::GOAL:
+        isCollidable = false;
+        isVisible = true;
+        break;
+    case TileType::ENEMY_SPAWN:
+    case TileType::PLAYER_SPAWN:
+        isCollidable = false;
+        isVisible = false;
+        break;
+    }
+}
+
+Tile::~Tile() {
+}
+
 Map::Map(int w, int h, float tSize)
     : width(w), height(h), tileSize(tSize) {
-    // 2次元配列を初期化
     tiles.resize(height);
     for (int i = 0; i < height; i++) {
         tiles[i].resize(width);
@@ -16,13 +44,9 @@ Map::~Map() {
 }
 
 HRESULT Map::Init() {
-    // テクスチャの読み込み（今はダミーテクスチャを作成）
-    // 実際のゲームでは画像ファイルから読み込む
-
-    // デバッグ用の単色テクスチャを作成
+    // テクスチャの読み込み
     dummyTexID = Texture_Load(L"resource/texture/kokosozai.png");
 
-    // 各タイル用のテクスチャID（後で実際のテクスチャファイルに置き換え）
     groundTexID = dummyTexID;
     brickTexID = dummyTexID;
     coinTexID = dummyTexID;
@@ -31,16 +55,18 @@ HRESULT Map::Init() {
     // サンプルマップを生成
     CreateSampleMap();
 
+    // BoxColliderを生成
+    CreateTileColliders();
+
     return S_OK;
 }
 
 void Map::Uninit() {
-    // テクスチャの解放は Texture_Finalize() で一括管理されるので
-    // 個別に解放する必要はない
+    ClearColliders();
 }
 
 void Map::Update() {
-    // マップ自体の更新処理（アニメーションタイルなどがあれば）
+    UpdateColliders();
 }
 
 void Map::Draw() {
@@ -48,8 +74,8 @@ void Map::Draw() {
         for (int x = 0; x < width; x++) {
             if (!tiles[y][x].isVisible) continue;
 
-            float worldX, worldY;
-            TileToWorld(x, y, worldX, worldY);
+            float worldX = (float)x * tileSize;
+            float worldY = (float)y * tileSize;
 
             int texID = dummyTexID;
             DirectX::XMFLOAT4 color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -57,28 +83,26 @@ void Map::Draw() {
             switch (tiles[y][x].type) {
             case TileType::GROUND:
                 texID = groundTexID;
-                color = DirectX::XMFLOAT4(0.6f, 0.4f, 0.2f, 1.0f); // 茶色
+                color = DirectX::XMFLOAT4(0.6f, 0.4f, 0.2f, 1.0f);
                 break;
             case TileType::BRICK:
                 texID = brickTexID;
-                color = DirectX::XMFLOAT4(0.8f, 0.3f, 0.3f, 1.0f); // 赤茶色
+                color = DirectX::XMFLOAT4(0.8f, 0.3f, 0.3f, 1.0f);
                 break;
             case TileType::COIN:
                 texID = coinTexID;
-                color = DirectX::XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f); // 黄色
+                color = DirectX::XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f);
                 break;
             case TileType::PIPE:
                 texID = pipeTexID;
-                color = DirectX::XMFLOAT4(0.2f, 0.8f, 0.2f, 1.0f); // 緑色
+                color = DirectX::XMFLOAT4(0.2f, 0.8f, 0.2f, 1.0f);
                 break;
             case TileType::GOAL:
                 texID = dummyTexID;
-                color = DirectX::XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f); // マゼンタ
+                color = DirectX::XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
                 break;
             }
 
-            // Sprite_Draw関数を使用して描画
-            // テクスチャ全体を使用する場合（tx=0, ty=0, tw=テクスチャ幅, th=テクスチャ高さ）
             int texWidth = 32;
             int texHeight = 32;
 
@@ -92,6 +116,72 @@ void Map::Draw() {
     }
 }
 
+void Map::CreateTileColliders() {
+    ClearColliders(); // 既存のコライダーを削除
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            float worldX = (float)x * tileSize;
+            float worldY = (float)y * tileSize;
+
+            switch (tiles[y][x].type) {
+            case TileType::GROUND:
+            case TileType::BRICK:
+            case TileType::PIPE:
+            {
+                // 静的な障害物コライダー
+                BoxCollider* collider = new BoxCollider(tileSize, tileSize, ColliderType::STATIC);
+                collider->SetPosition(worldX, worldY);
+                collider->SetLayer(0); // マップレイヤー
+                mapColliders.push_back(collider);
+                break;
+            }
+            case TileType::COIN:
+            {
+                // コイン用トリガーコライダー
+                BoxCollider* collider = new BoxCollider(tileSize, tileSize, ColliderType::TRIGGER);
+                collider->SetPosition(worldX, worldY);
+                collider->SetLayer(10); // コインレイヤー
+                coinColliders.push_back(collider);
+                break;
+            }
+            case TileType::GOAL:
+            {
+                // ゴール用トリガーコライダー
+                BoxCollider* collider = new BoxCollider(tileSize, tileSize, ColliderType::TRIGGER);
+                collider->SetPosition(worldX, worldY);
+                collider->SetLayer(20); // ゴールレイヤー
+                goalColliders.push_back(collider);
+                break;
+            }
+            }
+        }
+    }
+}
+
+void Map::UpdateColliders() {
+    // 必要に応じてコライダーの更新処理
+    // 例：アニメーションするタイルがあれば位置更新など
+}
+
+void Map::ClearColliders() {
+    for (BoxCollider* collider : mapColliders) {
+        delete collider;
+    }
+    mapColliders.clear();
+
+    for (BoxCollider* collider : coinColliders) {
+        delete collider;
+    }
+    coinColliders.clear();
+
+    for (BoxCollider* collider : goalColliders) {
+        delete collider;
+    }
+    goalColliders.clear();
+}
+
+// 残りのメソッドは既存のまま
 void Map::SetTile(int x, int y, TileType type) {
     if (x >= 0 && x < width && y >= 0 && y < height) {
         tiles[y][x] = Tile(type);
@@ -123,7 +213,6 @@ void Map::TileToWorld(int tileX, int tileY, float& worldX, float& worldY) const 
 }
 
 bool Map::CheckCollision(float x, float y, float w, float h) const {
-    // オブジェクトの四隅をタイル座標に変換してチェック
     int left, top, right, bottom;
     WorldToTile(x, y, left, top);
     WorldToTile(x + w, y + h, right, bottom);
@@ -165,24 +254,20 @@ std::vector<std::pair<float, float>> Map::GetEnemySpawnPositions() const {
 }
 
 void Map::CreateSampleMap() {
-    // サンプルのマリオ風ステージを作成
-
-    // 全体を空にする
+    // 既存のCreateSampleMapと同じ
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             SetTile(x, y, TileType::EMPTY);
         }
     }
 
-    // 地面を設置（下から2段目）
     for (int x = 0; x < width; x++) {
-        if (x < width - 10) { // 右端に穴を作る
+        if (x < width - 10) {
             SetTile(x, height - 2, TileType::GROUND);
             SetTile(x, height - 1, TileType::GROUND);
         }
     }
 
-    // ブロックをいくつか配置
     if (width > 12 && height > 6) {
         SetTile(10, height - 6, TileType::BRICK);
         SetTile(11, height - 6, TileType::BRICK);
@@ -191,19 +276,15 @@ void Map::CreateSampleMap() {
         SetTile(15, height - 4, TileType::BRICK);
         SetTile(16, height - 4, TileType::BRICK);
 
-        // コインを配置
         SetTile(10, height - 7, TileType::COIN);
         SetTile(11, height - 7, TileType::COIN);
         SetTile(12, height - 7, TileType::COIN);
 
-        // プレイヤーのスポーン位置
         SetTile(2, height - 4, TileType::PLAYER_SPAWN);
 
-        // 敵のスポーン位置
         if (width > 20) SetTile(20, height - 3, TileType::ENEMY_SPAWN);
         if (width > 30) SetTile(30, height - 3, TileType::ENEMY_SPAWN);
 
-        // ゴール
         SetTile(width - 5, height - 3, TileType::GOAL);
     }
 }

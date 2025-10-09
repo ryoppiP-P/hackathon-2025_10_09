@@ -171,6 +171,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 				g_pMap->Update();
 				g_pPlayer->Update(elapsed_time);
+				
+				BoxCollider::UpdateAllCollisions();
+
 				g_pPlayer->Draw();
 				g_pMap->Draw();
 

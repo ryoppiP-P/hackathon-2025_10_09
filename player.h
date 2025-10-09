@@ -3,6 +3,7 @@
 #include "sprite_anim.h"
 #include "map.h"
 #include "key_logger.h"
+#include "box_collider.h"
 #include <DirectXMath.h>
 
 class Player {
@@ -31,7 +32,10 @@ private:
     // マップ参照
     Map* mapRef;
 
-    // 当たり判定のオフセット（調整用）
+    // BoxCollider
+    BoxCollider* collider;
+
+    // kesu
     float collisionOffsetX, collisionOffsetY;
     float collisionWidth, collisionHeight;
 
@@ -45,33 +49,31 @@ public:
     void Update(double deltaTime);
     void Draw();
 
-    // 位置設定
+    // 位置・サイズ
     void SetPosition(float px, float py);
     void GetPosition(float& px, float& py) const;
-
-    // サイズ設定
     void SetSize(float w, float h);
     void GetSize(float& w, float& h) const;
 
-    // 当たり判定用の位置とサイズを取得
-    void GetCollisionRect(float& cx, float& cy, float& cw, float& ch) const;
+    // BoxColliderアクセス
+    BoxCollider* GetCollider() const { return collider; }
 
-    // マップとの当たり判定
+    // 当たり判定コールバック
+    void OnCollisionWithMap(const CollisionInfo& info);
+    void OnTriggerWithCoin(const CollisionInfo& info);
+    void OnTriggerWithGoal(const CollisionInfo& info);
+
+    // 旧システム（互換性のため残す）
+    void GetCollisionRect(float& cx, float& cy, float& cw, float& ch) const;
     bool CheckMapCollision(float nextX, float nextY) const;
     void HandleMapCollision();
-
-    // 地面チェック
     bool CheckGroundCollision() const;
 
-    // 入力処理
+    // 入力・物理・アニメーション
     void HandleInput(double deltaTime);
-
-    // 物理演算
     void UpdatePhysics(double deltaTime);
-
-    // アニメーション更新
     void UpdateAnimation(double deltaTime);
 
-    // リセット（ゲームオーバー時など）
+    // リセット
     void Reset();
 };

@@ -5,6 +5,7 @@
 #include "direct3d.h"
 #include "sprite.h"
 #include "texture.h"
+#include "box_collider.h"
 
 // タイルの種類
 enum class TileType : int {
@@ -23,32 +24,35 @@ struct Tile {
     TileType type;
     bool isCollidable;  // 当たり判定があるか
     bool isVisible;     // 描画するか
+    BoxCollider* collider;  // 各タイルのコライダー
 
-    Tile(TileType t = TileType::EMPTY) : type(t) {
-        // タイプに応じて当たり判定と可視性を設定
-        switch (t) {
-        case TileType::EMPTY:
-            isCollidable = false;
-            isVisible = false;
-            break;
-        case TileType::GROUND:
-        case TileType::BRICK:
-        case TileType::PIPE:
-            isCollidable = true;
-            isVisible = true;
-            break;
-        case TileType::COIN:
-        case TileType::GOAL:
-            isCollidable = false;
-            isVisible = true;
-            break;
-        case TileType::ENEMY_SPAWN:
-        case TileType::PLAYER_SPAWN:
-            isCollidable = false;
-            isVisible = false;
-            break;
-        }
-    }
+    //Tile(TileType t = TileType::EMPTY) : type(t) {
+    //    // タイプに応じて当たり判定と可視性を設定
+    //    switch (t) {
+    //    case TileType::EMPTY:
+    //        isCollidable = false;
+    //        isVisible = false;
+    //        break;
+    //    case TileType::GROUND:
+    //    case TileType::BRICK:
+    //    case TileType::PIPE:
+    //        isCollidable = true;
+    //        isVisible = true;
+    //        break;
+    //    case TileType::COIN:
+    //    case TileType::GOAL:
+    //        isCollidable = false;
+    //        isVisible = true;
+    //        break;
+    //    case TileType::ENEMY_SPAWN:
+    //    case TileType::PLAYER_SPAWN:
+    //        isCollidable = false;
+    //        isVisible = false;
+    //        break;
+    //    }
+    //}
+    Tile(TileType t = TileType::EMPTY);
+    ~Tile();
 };
 
 class Map {
@@ -65,6 +69,11 @@ private:
     int coinTexID;
     int pipeTexID;
     int dummyTexID;     // デバッグ用の単色テクスチャ
+
+    // コライダー管理
+    std::vector<BoxCollider*> mapColliders;    // 地面・壁用
+    std::vector<BoxCollider*> coinColliders;   // コイン用
+    std::vector<BoxCollider*> goalColliders;   // ゴール用
 
 public:
     Map(int w, int h, float tSize = 32.0f);
@@ -88,9 +97,14 @@ public:
     // 当たり判定チェック
     bool CheckCollision(float x, float y, float w, float h) const;
 
-    // プレイヤーやエネミーの初期位置を取得
+    // スポーン位置
     bool GetPlayerSpawnPosition(float& x, float& y) const;
     std::vector<std::pair<float, float>> GetEnemySpawnPositions() const;
+
+    // BoxCollider関連
+    void CreateTileColliders();      // タイル用コライダー生成
+    void UpdateColliders();          // コライダー更新
+    void ClearColliders();          // コライダー削除
 
     // サンプルマップの生成
     void CreateSampleMap();
